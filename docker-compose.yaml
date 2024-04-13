@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: nnpia_semestralka
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: xHeslo123
+    ports:
+      - "5432:5432"
+    container_name: nnpia_db
