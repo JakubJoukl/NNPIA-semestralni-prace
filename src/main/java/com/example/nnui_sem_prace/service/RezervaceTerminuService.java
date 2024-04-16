@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RezervaceTerminuService {
@@ -49,7 +51,9 @@ public class RezervaceTerminuService {
     }
 
     public RezervaceTerminu vytvorRezervaci(Uzivatel uzivatel, VypsanyTermin vypsanyTermin) {
+        LocalDateTime dnes = LocalDateTime.now();
         if(existujiPlatneRezervaceNaTermin(vypsanyTermin)) throw new RuntimeException("Na vypsany termin uz existuje platna rezervace");
+        if(vypsanyTermin.getTrvaniOd().isBefore(dnes)) throw new RuntimeException("Termin, ktery se pokousite rezervovat, je v minulosti");
         RezervaceTerminu rezervaceTerminu = new RezervaceTerminu(STAV_REZERVACE.NEPOTVRZENA, null, uzivatel, vypsanyTermin);
         return rezervaceTerminuRepository.save(rezervaceTerminu);
     }
@@ -67,6 +71,15 @@ public class RezervaceTerminuService {
             return rezervaceTerminuRepository.findRezervaceTerminuByUzivatelUzivatelIdAsc(strankovani, uzivatelId).getContent();
         } else {
             return rezervaceTerminuRepository.findRezervaceTerminuByUzivatelUzivatelIdDesc(strankovani, uzivatelId).getContent();
+        }
+    }
+
+    public List<RezervaceTerminu> dejVeskereTerminyUzivatelePlatneAVBudoucnu(int uzivatelId, PageRequest strankovani, boolean asc){
+        LocalDateTime dnes = LocalDateTime.now();
+        if(asc) {
+            return rezervaceTerminuRepository.dejAktualniPlatneTerminyUzivateleAsc(strankovani, uzivatelId, dnes).getContent();
+        } else {
+            return rezervaceTerminuRepository.dejAktualniPlatneTerminyUzivateleDesc(strankovani, uzivatelId, dnes).getContent();
         }
     }
 
@@ -93,5 +106,17 @@ public class RezervaceTerminuService {
 
     public RezervaceTerminu save(RezervaceTerminu rezervaceTerminu){
         return rezervaceTerminuRepository.save(rezervaceTerminu);
+    }
+
+    public HashMap<String, Object> obalInformacemiOPoctu(Uzivatel uzivatel, List<RezervaceTerminuDTO> rezervaceTerminuUzivatele, boolean jenBudouciAPlatne) {
+        HashMap<String, Object> vraceneParametry = new HashMap<>();
+        LocalDateTime dnes = LocalDateTime.now();
+        if(jenBudouciAPlatne) {
+            vraceneParametry.put("pocet", uzivatel.getRezervovaneTerminy().stream().filter(rezervaceTerminu -> (rezervaceTerminu.getStavRezervace() == STAV_REZERVACE.POTVRZENA || rezervaceTerminu.getStavRezervace() == STAV_REZERVACE.NEPOTVRZENA) && rezervaceTerminu.getVypsanyTermin().getTrvaniOd().isAfter(dnes)).toList().size());
+        } else {
+            vraceneParametry.put("pocet", uzivatel.getRezervovaneTerminy().size());
+        }
+        vraceneParametry.put("data", rezervaceTerminuUzivatele);
+        return vraceneParametry;
     }
 }

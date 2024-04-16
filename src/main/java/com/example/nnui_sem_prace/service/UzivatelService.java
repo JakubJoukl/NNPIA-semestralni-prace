@@ -1,6 +1,9 @@
 package com.example.nnui_sem_prace.service;
 
+import com.example.nnui_sem_prace.dto.RegistraceUzivateleDTO;
+import com.example.nnui_sem_prace.dto.RezervaceTerminuDTO;
 import com.example.nnui_sem_prace.dto.VypsanyTerminDTO;
+import com.example.nnui_sem_prace.model.RezervaceTerminu;
 import com.example.nnui_sem_prace.model.Uzivatel;
 import com.example.nnui_sem_prace.model.VypsanyTermin;
 import com.example.nnui_sem_prace.repository.UzivatelRepository;
@@ -18,14 +21,13 @@ import java.util.List;
 @Service
 public class UzivatelService implements UserDetailsService {
     @Autowired
+    private ModelMapper modelMapper;
+
+    @Autowired
     private UzivatelRepository uzivatelRepository;
 
     public Uzivatel getUzivatelById(int id){
         return uzivatelRepository.getUzivatelByUzivatelId(id);
-    }
-
-    public Uzivatel getUzivatelByUsername(String username){
-        return uzivatelRepository.getUzivatelByUsername(username);
     }
 
     public Uzivatel save(Uzivatel uzivatel){
@@ -33,11 +35,17 @@ public class UzivatelService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Uzivatel uzivatel = getUzivatelByUsername(username);
-        if (uzivatel == null) {
-            throw new UsernameNotFoundException("Uzivatel nenalezen: " + username);
-        }
+    public Uzivatel loadUserByUsername(String username) throws UsernameNotFoundException {
+        Uzivatel uzivatel = uzivatelRepository.getUzivatelByUsername(username);
         return uzivatel;
     }
+
+    public RegistraceUzivateleDTO prevedUzivatelNaRegistraceUzivateleDTO(Uzivatel uzivatel){
+        return modelMapper.map(uzivatel, RegistraceUzivateleDTO.class);
+    }
+
+    public Uzivatel prevedRegistraceUzivateleDTONaUzivatel(RegistraceUzivateleDTO uzivateleDTO){
+        return modelMapper.map(uzivateleDTO, Uzivatel.class);
+    }
+
 }

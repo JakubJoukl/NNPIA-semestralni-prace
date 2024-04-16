@@ -10,14 +10,17 @@ import com.example.nnui_sem_prace.service.UzivatelService;
 import com.example.nnui_sem_prace.service.VypsaneTerminyService;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 
 @RestController()
@@ -32,51 +35,47 @@ public class RezervaceTerminuController {
     @Autowired
     private UzivatelService uzivatelService;
 
-    @Autowired
-    private VypsaneTerminyService vypsaneTerminyService;
-
-
-    @GetMapping("/{idUzivatele}")
-    public ResponseEntity<?> dejRezervaceUzivatele(@PathVariable Integer idUzivatele, @RequestParam int pageNumber, @RequestParam boolean asc){
-        if(idUzivatele == null) return new ResponseEntity<>("Nevyplnene id uzivatele", HttpStatus.BAD_REQUEST);
-        Uzivatel uzivatel = uzivatelService.getUzivatelById(idUzivatele);
+    @GetMapping("/")
+    public ResponseEntity<?> dejRezervaceUzivatele(Authentication authentication, @RequestParam int pageNumber, @RequestParam boolean asc){
+        String uzivatelskeJmeno = authentication.getName();
+        Uzivatel uzivatel = uzivatelService.loadUserByUsername(uzivatelskeJmeno);
         if(uzivatel == null) return new ResponseEntity<>("Uzivatel nenalezen", HttpStatus.BAD_REQUEST);
-        PageRequest pageRequest = PageRequest.of(pageNumber - 1, 10);
-        List<RezervaceTerminuDTO> rezervaceTerminuUzivatele = rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(rezervaceTerminuService.dejVeskereTerminyUzivatele(idUzivatele, pageRequest, asc));
-        return new ResponseEntity<>(rezervaceTerminuUzivatele, HttpStatus.OK);
+        PageRequest pageRequest = PageRequest.of(pageNumber, 10);
+        List<RezervaceTerminuDTO> rezervaceTerminuUzivatele = rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(rezervaceTerminuService.dejVeskereTerminyUzivatele(uzivatel.getUzivatelId(), pageRequest, asc));
+        HashMap<String, Object> vraceneParametry = rezervaceTerminuService.obalInformacemiOPoctu(uzivatel, rezervaceTerminuUzivatele, false);
+        return new ResponseEntity<>(vraceneParametry, HttpStatus.OK);
     }
 
-    @GetMapping("/{idUzivatele}/{denDDMMRRRR}")
-    public ResponseEntity<?> dejRezervaceUzivateleNaDen(@PathVariable Integer idUzivatele, @PathVariable String denDDMMRRRR){
-        if(idUzivatele == null) return new ResponseEntity<>("Nevyplnene id uzivatele", HttpStatus.BAD_REQUEST);
+    @GetMapping("/budouci")
+    public ResponseEntity<?> dejRezervaceUzivateleVPlatneAVBudoucnu(Authentication authentication, @RequestParam int pageNumber, @RequestParam boolean asc){
+        String uzivatelskeJmeno = authentication.getName();
+        Uzivatel uzivatel = uzivatelService.loadUserByUsername(uzivatelskeJmeno);
+        if(uzivatel == null) return new ResponseEntity<>("Uzivatel nenalezen", HttpStatus.BAD_REQUEST);
+        PageRequest pageRequest = PageRequest.of(pageNumber, 10);
+        List<RezervaceTerminuDTO> rezervaceTerminuUzivatele = rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(rezervaceTerminuService.dejVeskereTerminyUzivatelePlatneAVBudoucnu(uzivatel.getUzivatelId(), pageRequest, asc));
+        HashMap<String, Object> vraceneParametry = rezervaceTerminuService.obalInformacemiOPoctu(uzivatel, rezervaceTerminuUzivatele, true);
+        return new ResponseEntity<>(vraceneParametry, HttpStatus.OK);
+    }
+
+    @GetMapping("/{denDDMMRRRR}")
+    public ResponseEntity<?> dejRezervaceUzivateleNaDen(Authentication authentication, @PathVariable String denDDMMRRRR){
+        String uzivatelskeJmeno = authentication.getName();
+        Uzivatel uzivatel = uzivatelService.loadUserByUsername(uzivatelskeJmeno);
+        if(uzivatel == null) return new ResponseEntity<>("Uzivatel nenalezen", HttpStatus.BAD_REQUEST);
         try {
             LocalDate den = DatumoveNastroje.prevedDatumNaLocalDate(denDDMMRRRR);
-            List<RezervaceTerminuDTO> rezervaceTerminuUzivateleDto = rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(rezervaceTerminuService.dejVeskereTerminyUzivateleNaDen(idUzivatele, den));
+            List<RezervaceTerminuDTO> rezervaceTerminuUzivateleDto = rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(rezervaceTerminuService.dejVeskereTerminyUzivateleNaDen(uzivatel.getUzivatelId(), den));
             return new ResponseEntity<>(rezervaceTerminuUzivateleDto, HttpStatus.OK);
-        } catch (ParseException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>("Spatne vyplnene datum", HttpStatus.BAD_REQUEST);
         }
     }
 
-    @PostMapping("/{idUzivatele}/vytvorRezervaci")
-    public ResponseEntity<?> vytvorRezervaciNaTermin(@PathVariable Integer idUzivatele, @RequestBody Integer vypsanyTerminId){
-        if(idUzivatele == null) return new ResponseEntity<>("Nevyplnene id uzivatele", HttpStatus.BAD_REQUEST);
-        if(vypsanyTerminId == null) return new ResponseEntity<>("Nevyplnene id terminu rezervace", HttpStatus.BAD_REQUEST);
-        Uzivatel uzivatel = uzivatelService.getUzivatelById(idUzivatele);
-        if(uzivatel == null) return new ResponseEntity<>("Uzivatel nenalezen", HttpStatus.BAD_REQUEST);
-        VypsanyTermin vypsanyTermin = vypsaneTerminyService.getVypsanyTerminById(vypsanyTerminId);
-        if(vypsanyTermin == null) return new ResponseEntity<>("Vypsany termin nenalezen", HttpStatus.BAD_REQUEST);
-        if(rezervaceTerminuService.maUzivatelRezervaciNaDanyDen(uzivatel, vypsanyTermin.getTrvaniOd())) return new ResponseEntity<>("Rezervace nebyla vytvorena - uzivatel na dany termin jiz ma rezervaci", HttpStatus.BAD_REQUEST);
-        RezervaceTerminu rezervaceTerminu = rezervaceTerminuService.vytvorRezervaci(uzivatel, vypsanyTermin);
-        if(rezervaceTerminu == null) return new ResponseEntity<>("Rezervaci se nepodarilo vytvorit", HttpStatus.BAD_REQUEST);
-        return new ResponseEntity<>(rezervaceTerminuService.prevedRezervaciTerminuNaDTO(rezervaceTerminu), HttpStatus.CREATED);
-    }
-
-    @PostMapping("/{idUzivatele}/zrusRezervaciTerminu")
-    public ResponseEntity<?> smazRezervaciUzivatele(@PathVariable Integer idUzivatele, @RequestBody Integer rezervaceId){
-        if(idUzivatele == null) return new ResponseEntity<>("Nevyplnene id uzivatele", HttpStatus.BAD_REQUEST);
+    @PostMapping("/zrusRezervaciTerminu")
+    public ResponseEntity<?> smazRezervaciUzivatele(Authentication authentication, @RequestBody Integer rezervaceId){
         if(rezervaceId == null) return new ResponseEntity<>("Nevyplnene id rezervace", HttpStatus.BAD_REQUEST);
-        Uzivatel uzivatel = uzivatelService.getUzivatelById(idUzivatele);
+        String uzivatelskeJmeno = authentication.getName();
+        Uzivatel uzivatel = uzivatelService.loadUserByUsername(uzivatelskeJmeno);
         if(uzivatel == null) return new ResponseEntity<>("Uzivatel nenalezen", HttpStatus.BAD_REQUEST);
         RezervaceTerminu rezervaceTerminu = rezervaceTerminuService.dejRezervaciTerminuDleId(rezervaceId);
         if(rezervaceTerminu == null) return new ResponseEntity<>("Rezervace terminu nenalezena", HttpStatus.BAD_REQUEST);

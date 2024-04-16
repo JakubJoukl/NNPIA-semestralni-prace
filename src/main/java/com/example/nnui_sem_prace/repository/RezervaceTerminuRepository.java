@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface RezervaceTerminuRepository extends JpaRepository<RezervaceTerminu, Integer> {
@@ -22,6 +23,12 @@ public interface RezervaceTerminuRepository extends JpaRepository<RezervaceTermi
     public Page<RezervaceTerminu> findRezervaceTerminuByUzivatelUzivatelIdDesc(Pageable pageable, @Param("uzivatelId") Integer uzivatelId);
 
     public RezervaceTerminu getRezervaceTerminuByRezervaceTerminuId(Integer rezervaceTerminuId);
+
+    @Query("SELECT r FROM RezervaceTerminu r inner JOIN r.uzivatel u inner join r.vypsanyTermin t where r.uzivatel.uzivatelId = :uzivatelId and t.trvaniOd > :aktualniDatum and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA') ORDER by t.trvaniOd asc")
+    public Page<RezervaceTerminu> dejAktualniPlatneTerminyUzivateleAsc(Pageable pageable, @Param("uzivatelId") Integer uzivatelId, @Param("aktualniDatum")LocalDateTime aktualniDatum);
+
+    @Query("SELECT r FROM RezervaceTerminu r inner JOIN r.uzivatel u inner join r.vypsanyTermin t where r.uzivatel.uzivatelId = :uzivatelId and t.trvaniOd > :aktualniDatum and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA') ORDER by t.trvaniOd desc")
+    public Page<RezervaceTerminu> dejAktualniPlatneTerminyUzivateleDesc(Pageable pageable, @Param("uzivatelId") Integer uzivatelId, @Param("aktualniDatum")LocalDateTime aktualniDatum);
 
     Page<RezervaceTerminu> findAll(Pageable pageable);
 }

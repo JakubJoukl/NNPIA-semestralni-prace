@@ -15,7 +15,7 @@ import java.util.List;
 @Entity
 @Data
 @NoArgsConstructor
-@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="vypsanyTerminId")
+//@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="vypsanyTerminId")
 public class VypsanyTermin {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

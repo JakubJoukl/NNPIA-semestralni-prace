@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -59,6 +60,7 @@ public class Uzivatel implements UserDetails {
         this.prijmeni = prijmeni;
         this.datumNarozeni = datumNarozeni;
         this.rezervovaneTerminy = rezervovaneTerminy;
+        this.roles = new ArrayList<>();
     }
 
     @Override
