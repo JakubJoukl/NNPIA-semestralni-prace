@@ -1,6 +1,7 @@
 package com.example.nnui_sem_prace.controller;
 
 import com.example.nnui_sem_prace.Utils.DatumoveNastroje;
+import com.example.nnui_sem_prace.Utils.RadiciNastroje;
 import com.example.nnui_sem_prace.dto.RezervaceTerminuDTO;
 import com.example.nnui_sem_prace.model.RezervaceTerminu;
 import com.example.nnui_sem_prace.model.Uzivatel;
@@ -36,23 +37,32 @@ public class RezervaceTerminuController {
     private UzivatelService uzivatelService;
 
     @GetMapping("/")
-    public ResponseEntity<?> dejRezervaceUzivatele(Authentication authentication, @RequestParam int pageNumber, @RequestParam boolean asc){
+    public ResponseEntity<?> dejRezervaceUzivatele(Authentication authentication, @RequestParam int pageNumber, @RequestParam boolean asc, @RequestParam(value = "sort", required = false) List<String> sortBy){
         String uzivatelskeJmeno = authentication.getName();
         Uzivatel uzivatel = uzivatelService.loadUserByUsername(uzivatelskeJmeno);
         if(uzivatel == null) return new ResponseEntity<>("Uzivatel nenalezen", HttpStatus.BAD_REQUEST);
-        PageRequest pageRequest = PageRequest.of(pageNumber, 10);
-        List<RezervaceTerminuDTO> rezervaceTerminuUzivatele = rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(rezervaceTerminuService.dejVeskereTerminyUzivatele(uzivatel.getUzivatelId(), pageRequest, asc));
+        PageRequest pageRequest = PageRequest.of(pageNumber, 10, RadiciNastroje.getSort(sortBy));
+        List<RezervaceTerminuDTO> rezervaceTerminuUzivatele = rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(rezervaceTerminuService.dejVeskereTerminyUzivatele(uzivatel.getUzivatelId(), pageRequest));
         HashMap<String, Object> vraceneParametry = rezervaceTerminuService.obalInformacemiOPoctu(uzivatel, rezervaceTerminuUzivatele, false);
         return new ResponseEntity<>(vraceneParametry, HttpStatus.OK);
     }
 
     @GetMapping("/budouci")
-    public ResponseEntity<?> dejRezervaceUzivateleVPlatneAVBudoucnu(Authentication authentication, @RequestParam int pageNumber, @RequestParam boolean asc){
+    public ResponseEntity<?> dejRezervaceUzivateleVPlatneAVBudoucnu(Authentication authentication, @RequestParam int pageNumber, @RequestParam boolean asc, @RequestParam(value = "sort", required = false) List<String> sortBy){
         String uzivatelskeJmeno = authentication.getName();
+
+        if(sortBy != null) {
+            for (int i = 0; i < sortBy.size(); i += 2) {
+                if (sortBy.get(i).equals("trvaniOd") || sortBy.get(i).equals("trvaniDo")) {
+                    sortBy.set(i, "t." + sortBy.get(i));
+                }
+            }
+        }
+
         Uzivatel uzivatel = uzivatelService.loadUserByUsername(uzivatelskeJmeno);
         if(uzivatel == null) return new ResponseEntity<>("Uzivatel nenalezen", HttpStatus.BAD_REQUEST);
-        PageRequest pageRequest = PageRequest.of(pageNumber, 10);
-        List<RezervaceTerminuDTO> rezervaceTerminuUzivatele = rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(rezervaceTerminuService.dejVeskereTerminyUzivatelePlatneAVBudoucnu(uzivatel.getUzivatelId(), pageRequest, asc));
+        PageRequest pageRequest = PageRequest.of(pageNumber, 10, RadiciNastroje.getSort(sortBy));
+        List<RezervaceTerminuDTO> rezervaceTerminuUzivatele = rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(rezervaceTerminuService.dejVeskereTerminyUzivatelePlatneAVBudoucnu(uzivatel.getUzivatelId(), pageRequest));
         HashMap<String, Object> vraceneParametry = rezervaceTerminuService.obalInformacemiOPoctu(uzivatel, rezervaceTerminuUzivatele, true);
         return new ResponseEntity<>(vraceneParametry, HttpStatus.OK);
     }

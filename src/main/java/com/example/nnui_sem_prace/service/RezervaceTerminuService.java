@@ -66,21 +66,13 @@ public class RezervaceTerminuService {
         return rezervaceTerminuRepository.DejVeskereRezervaceUzivateleNaDen(uzivatel.getUzivatelId(), datumRezervace.toLocalDate()).size() > 0;
     }
 
-    public List<RezervaceTerminu> dejVeskereTerminyUzivatele(int uzivatelId, PageRequest strankovani, boolean asc){
-        if(asc) {
-            return rezervaceTerminuRepository.findRezervaceTerminuByUzivatelUzivatelIdAsc(strankovani, uzivatelId).getContent();
-        } else {
-            return rezervaceTerminuRepository.findRezervaceTerminuByUzivatelUzivatelIdDesc(strankovani, uzivatelId).getContent();
-        }
+    public List<RezervaceTerminu> dejVeskereTerminyUzivatele(int uzivatelId, PageRequest strankovani){
+        return rezervaceTerminuRepository.findRezervaceTerminuByUzivatelUzivatelIdAsc(strankovani, uzivatelId).getContent();
     }
 
-    public List<RezervaceTerminu> dejVeskereTerminyUzivatelePlatneAVBudoucnu(int uzivatelId, PageRequest strankovani, boolean asc){
+    public List<RezervaceTerminu> dejVeskereTerminyUzivatelePlatneAVBudoucnu(int uzivatelId, PageRequest strankovani){
         LocalDateTime dnes = LocalDateTime.now();
-        if(asc) {
-            return rezervaceTerminuRepository.dejAktualniPlatneTerminyUzivateleAsc(strankovani, uzivatelId, dnes).getContent();
-        } else {
-            return rezervaceTerminuRepository.dejAktualniPlatneTerminyUzivateleDesc(strankovani, uzivatelId, dnes).getContent();
-        }
+        return rezervaceTerminuRepository.dejAktualniPlatneTerminyUzivateleAsc(strankovani, uzivatelId, dnes).getContent();
     }
 
     public List<RezervaceTerminu> dejVeskereTerminyUzivateleNaDen(int uzivatelId, LocalDate den){

@@ -72,7 +72,7 @@ public class IntegracniTests {
     @Transactional
     public void vytvorRezervaciTerminuTest() throws Exception {
         int userId = 1;
-        int vypsanyTerminId = 6;
+        int vypsanyTerminId = 5;
         Uzivatel uzivatel = uzivatelService.getUzivatelById(userId);
 
         String requestBody = objectMapper.writeValueAsString(vypsanyTerminId);
@@ -87,7 +87,7 @@ public class IntegracniTests {
         String jwtToken = mvc.perform(post("/security/login").with(csrf()).headers(headers)).andReturn().getResponse().getContentAsString();
 
         mvc.perform(
-                post("/terminyUzivatele/"+ userId + "/vytvorRezervaci")
+                post("/vypsaneTerminy/vytvorRezervaci")
                         .with(csrf()).contentType(MediaType.APPLICATION_JSON).content(requestBody)
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isCreated())

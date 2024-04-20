@@ -1,12 +1,28 @@
 package com.example.nnui_sem_prace.Utils;
 
+import org.springframework.data.domain.Sort;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 public class RadiciNastroje {
-    //TODO funguje
+    public static Sort getSort(List<String> sortBy) {
+        if (sortBy == null || sortBy.isEmpty()) {
+            return Sort.unsorted();
+        }
+
+        List<Sort.Order> smerRazeni = new ArrayList<>();
+        for(int i = 0; i < sortBy.size(); i+=2){
+            String property = sortBy.get(i);
+            String direction = sortBy.get(i+1);
+            smerRazeni.add(new Sort.Order(Sort.Direction.fromString(direction), property));
+        }
+
+        return Sort.by(smerRazeni);
+    }
+
     public static <K> List<K> vratSerazenyListDlePole(String nazevPoleProRazeni, List<K> prvkyKSerazeni, boolean asc){
         if(prvkyKSerazeni.size() <= 0) return prvkyKSerazeni;
         Class<?> kClass = prvkyKSerazeni.get(0).getClass();

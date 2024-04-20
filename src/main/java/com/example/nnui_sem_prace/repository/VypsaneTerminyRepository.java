@@ -16,16 +16,16 @@ public interface VypsaneTerminyRepository extends JpaRepository<VypsanyTermin, I
 
     VypsanyTermin getVypsanyTerminByVypsanyTerminId(Integer id);
 
-    @Query("SELECT v from VypsanyTermin v where not exists (SELECT r from RezervaceTerminu r where r.vypsanyTermin = v and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA')) and v.trvaniOd > :keDni order by v.trvaniOd ASC")
+    @Query("SELECT v from VypsanyTermin v where not exists (SELECT r from RezervaceTerminu r where r.vypsanyTermin = v and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA')) and v.trvaniOd > :keDni")
     Page<VypsanyTermin> dejVeskerePlatneVolneTerminyStrankovatelne(@Param("keDni") LocalDateTime keDni, Pageable pageable);
 
-    @Query("SELECT v from VypsanyTermin v where not exists (SELECT r from RezervaceTerminu r where r.vypsanyTermin = v and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA')) and v.trvaniOd > :keDni order by v.trvaniOd ASC")
+    @Query("SELECT v from VypsanyTermin v where not exists (SELECT r from RezervaceTerminu r where r.vypsanyTermin = v and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA')) and v.trvaniOd > :keDni")
     List<VypsanyTermin> dejVeskerePlatneVolneTerminy(@Param("keDni") LocalDateTime keDni);
 
-    @Query("SELECT v from VypsanyTermin v where not exists (SELECT r from RezervaceTerminu r where r.vypsanyTermin = v and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA')) and v.trvaniOd > :dnes and date(v.trvaniOd) = :denTerminu order by v.trvaniOd ASC")
+    @Query("SELECT v from VypsanyTermin v where not exists (SELECT r from RezervaceTerminu r where r.vypsanyTermin = v and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA')) and v.trvaniOd > :dnes and date(v.trvaniOd) = :denTerminu")
     Page<VypsanyTermin> dejVeskerePlatneVolneTerminyStrankovatelneANaDen(@Param("dnes") LocalDateTime keDni, LocalDate denTerminu, Pageable pageable);
 
-    @Query("SELECT v from VypsanyTermin v where not exists (SELECT r from RezervaceTerminu r where r.vypsanyTermin = v and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA')) and v.trvaniOd > :dnes and date(v.trvaniOd) = :denTerminu order by v.trvaniOd ASC")
+    @Query("SELECT v from VypsanyTermin v where not exists (SELECT r from RezervaceTerminu r where r.vypsanyTermin = v and r.stavRezervace in ('POTVRZENA', 'NEPOTVRZENA')) and v.trvaniOd > :dnes and date(v.trvaniOd) = :denTerminu")
     List<VypsanyTermin> dejVeskerePlatneVolneTerminyNaDen(@Param("dnes") LocalDateTime keDni, LocalDate denTerminu);
 
     Page<VypsanyTermin> findAll(Pageable pageable);

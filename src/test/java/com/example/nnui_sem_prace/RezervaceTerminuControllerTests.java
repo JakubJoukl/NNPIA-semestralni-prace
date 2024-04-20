@@ -83,7 +83,7 @@ class RezervaceTerminuControllerTests {
 
         given(uzivatelService.getUzivatelById(userId)).willReturn(mockUser);
         given(rezervaceTerminuService.prevedListRezervaciTerminuNaListDTO(mockUser.getRezervovaneTerminy())).willReturn(rezervaceTerminuDTOList);
-        given(rezervaceTerminuService.dejVeskereTerminyUzivatele(userId, pageRequest, true)).willReturn(listRezervaceTerminu);
+        given(rezervaceTerminuService.dejVeskereTerminyUzivatele(userId, pageRequest)).willReturn(listRezervaceTerminu);
         given(rezervaceTerminuService.obalInformacemiOPoctu(mockUser, rezervaceTerminuDTOList, false)).willReturn(vracenaOdpoved);
         given(uzivatelService.loadUserByUsername("pacient1")).willReturn(mockUser);
 
